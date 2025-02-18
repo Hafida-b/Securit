@@ -1,18 +1,18 @@
 <template>
     <div class="login-container">
+    
         <div>
             <img src="/images/logo.webp">
         </div>
 
-        <h2>Connexion</h2>
+        <h2>Création de compte</h2>
 
-        <form @submit.prevent="checkUser">
-
+        <form @submit.prevent = "createAccount" >
             <div class="form-group mb-2">
                 <label for="email">Email</label>
                 <div class="input-container">
                     <span class="icon">@</span>
-                    <input type="email" id="email" name = "email" v-model = "form_data.email" placeholder="Ex: abc@example.com" required>
+                    <input type="email" id="email" name= "email" v-model = "form_data.email" placeholder="Ex: abc@example.com" required>
                 </div>
             </div>
 
@@ -20,24 +20,28 @@
                 <label for="password">Mot de passe</label>
                 <div class="input-container">
                     <span class="icon">🔒</span>
-                    <input type="password" id="password" name = "password" v-model = "form_data.password" placeholder="********" required>
+                    <input type="password" id="password" name="password" minlength=6 v-model = "form_data.password" placeholder="********" required>
                 </div>
             </div>
-                
-            <div class="mb-2">
-                <button type="submit" class="large-button ">Connexion</button>
-            </div>
             
+            <div class="form-group mb-2">
+                <label for="password">Mot de passe(confirmer)</label>
+                <div class="input-container">
+                    <span class="icon">🔒</span>
+                    <input type="password" id="password2" name= "password2" minlength=6 v-model = "form_data.password2" placeholder="********" required>
+                </div> 
+            </div>
+
+            <button type="submit" class="large-button">Créer</button>
+
+            
+            <p class="error">{{error_message }}</p>  
+
         </form>
-
-        <p class="error">{{error_message }}</p>
-
-        <a href="register">Créer un compte</a>
-
+        
+        <a href="login">Connexion</a>
     </div>
-
 </template>
-
 
 <script setup>
  import { ref } from 'vue'
@@ -48,26 +52,32 @@
  const error_message = ref("")
 
 
-async function checkUser () {
-    console.log(form_data.value)
-    emailPerson.value = form_data.value.email
-    const response = await fetch('/auth/check_user', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(form_data.value), 
-    })
 
-    if (response.status === 200) {
-        router.push("Verify_code")
-    } else {
-        error_message.value = "Email ou mot de passe incorrect "
-    }
+async function createAccount() {
+    if (form_data.value.password === form_data.value.password2){
+        const response = await fetch('/auth/create_account', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(form_data.value), 
+        })
+
+        if (response.status === 200) {
+            router.push("login")
+        } else if (response.status === 400){
+            error_message.value = "l'email existe déjà "
+        } else {
+            error_message.value = "erreur inconnue"
+        }
+    } else { 
+             error_message.value = "Les mots de passe sont diférents "
+    }   
 }
-</script> 
+
+</script>
 
 <style scoped>
-    
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -292,7 +302,6 @@ text-decoration: none;
 font-size: 18px;
 }
   
-
 
 
 </style>

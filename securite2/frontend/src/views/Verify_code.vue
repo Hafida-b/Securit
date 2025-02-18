@@ -1,57 +1,40 @@
 <template>
     <div class="login-container">
-        <div>
-            <img src="/images/logo.webp">
-        </div>
-
-        <h2>Connexion</h2>
-
-        <form @submit.prevent="checkUser">
-
-            <div class="form-group mb-2">
-                <label for="email">Email</label>
-                <div class="input-container">
-                    <span class="icon">@</span>
-                    <input type="email" id="email" name = "email" v-model = "form_data.email" placeholder="Ex: abc@example.com" required>
-                </div>
-            </div>
-
-            <div class="form-group mb-2">
-                <label for="password">Mot de passe</label>
-                <div class="input-container">
-                    <span class="icon">🔒</span>
-                    <input type="password" id="password" name = "password" v-model = "form_data.password" placeholder="********" required>
-                </div>
-            </div>
-                
-            <div class="mb-2">
-                <button type="submit" class="large-button ">Connexion</button>
-            </div>
-            
-        </form>
-
-        <p class="error">{{error_message }}</p>
-
-        <a href="register">Créer un compte</a>
-
+    <div>
+    <img src="/images/logo.webp">
     </div>
+       <h2>Vérifiez votre boîte mail et tapez le code de confirmation</h2>
 
+       <form @submit.prevent = "verifyCode">
+           <div class="form-group mb-2">
+               <label for="code-confirmation">Code de confirmation</label>
+               <div class="input-container">
+                   <input name="code" type="text" id="code" v-model= "form_data.code" placeholder="Ex: 12345" required>
+               </div>
+           </div>
+           <br>
+           <button type="submit" class="large-button">Continuer</button>
+           <br>
+           <div> 
+                <p>{{ error_message }}</p>
+           </div>
+       </form>
+   </div>
 </template>
-
 
 <script setup>
  import { ref } from 'vue'
  import router from '../router'
- import { emailPerson } from '../use/usePersonEmail'
+ import { emailPerson } from "/src/use/usePersonEmail"
 
  const form_data = ref({})
  const error_message = ref("")
 
 
-async function checkUser () {
-    console.log(form_data.value)
-    emailPerson.value = form_data.value.email
-    const response = await fetch('/auth/check_user', {
+async function verifyCode() {
+    // enrichi form_data de l'email
+    form_data.value.email = emailPerson.value
+    const response = await fetch('/auth/verify_code', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'
         },
@@ -59,15 +42,22 @@ async function checkUser () {
     })
 
     if (response.status === 200) {
-        router.push("Verify_code")
+        router.push("visit")
     } else {
-        error_message.value = "Email ou mot de passe incorrect "
+        if (response === 405){
+            //router.push("Login")
+            error_message.value = "Code expiré "
+        } else {
+             error_message.value = "Code de confirmation invalide"
+        }
+        
     }
 }
-</script> 
+
+</script>
 
 <style scoped>
-    
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -292,7 +282,6 @@ text-decoration: none;
 font-size: 18px;
 }
   
-
 
 
 </style>
